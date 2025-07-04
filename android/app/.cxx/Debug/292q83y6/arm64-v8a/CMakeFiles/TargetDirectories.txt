@@ -1,0 +1,2 @@
+C:/Users/myr07/StudioProjects/WISET_E19/client/android/app/.cxx/Debug/292q83y6/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/myr07/StudioProjects/WISET_E19/client/android/app/.cxx/Debug/292q83y6/arm64-v8a/CMakeFiles/rebuild_cache.dir
