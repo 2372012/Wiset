@@ -9,6 +9,7 @@ import 'package:client/provider/page_provider.dart';
 import 'package:client/provider/theme_provider.dart';
 import 'package:client/provider/detection_provider.dart';
 import 'package:client/presentation/loading.dart';
+import 'package:client/constants.dart';
 
 class DetectPage extends StatefulWidget {
   const DetectPage({super.key});
@@ -51,7 +52,7 @@ class _DetectPageState extends State<DetectPage> {
   }
 
   Future<void> sendImageToDetectionApi(Uint8List imageBytes, String token, String detectionId) async {
-    final uri = Uri.parse('https://wiset-deepfake-server.onrender.com/detections/$detectionId/run');
+    final uri = Uri.parse('${Constants.baseUrl}/detections/$detectionId/run');
 
     final request = http.MultipartRequest('POST', uri)
       ..headers['Authorization'] = 'Bearer $token'

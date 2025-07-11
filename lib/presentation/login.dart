@@ -8,6 +8,7 @@ import 'package:client/provider/theme_provider.dart';
 import 'package:client/provider/token_provider.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:client/constants.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,6 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _pwController = TextEditingController();
   bool _autoLogin = false;
   bool _isLoading = false;
+  bool _showPassword = false; // 👁️ 비밀번호 표시 상태
 
   Future<void> _login(BuildContext context) async {
     final id = _idController.text.trim();
@@ -30,12 +32,12 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _isLoading = true);
 
-    final url = Uri.parse('https://wiset-deepfake-server.onrender.com/auth/login');
+    final url = Uri.parse('${Constants.baseUrl}/auth/login');
 
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'username': id, 'password': pw}),
+      body: jsonEncode({'loginId': id, 'password': pw}),
     );
 
     setState(() => _isLoading = false);
@@ -43,18 +45,15 @@ class _LoginPageState extends State<LoginPage> {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final token = data['token'];
-      final userId = data['userId'];
 
-      // TokenProvider에 저장
       context.read<TokenProvider>().setToken(token);
+      context.read<TokenProvider>().setLoginId(id); // ✅ loginId 저장 추가
 
-      // 자동 로그인 설정 시 저장
       if (_autoLogin) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
       }
 
-      // 페이지 이동
       context.read<PageProvider>().setPage('main');
     } else {
       showDialog(
@@ -98,7 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     _buildTextField('아이디', _idController, theme),
                     const SizedBox(height: 12),
-                    _buildTextField('비밀번호', _pwController, theme, obscure: true),
+                    _buildPasswordField(theme), // 👁️ 수정된 부분
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -173,9 +172,13 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  // 👁️ 일반 텍스트 필드 (아이디 등)
   Widget _buildTextField(
-      String hint, TextEditingController controller, ThemeProvider theme,
-      {bool obscure = false}) {
+      String hint,
+      TextEditingController controller,
+      ThemeProvider theme, {
+        bool obscure = false,
+      }) {
     return TextField(
       controller: controller,
       obscureText: obscure,
@@ -184,6 +187,41 @@ class _LoginPageState extends State<LoginPage> {
         hintStyle: const TextStyle(color: Colors.white),
         filled: true,
         fillColor: theme.textFieldColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.black),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.black),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+      style: const TextStyle(color: Colors.white),
+    );
+  }
+
+  // 👁️ 비밀번호 필드 (눈 아이콘 포함)
+  Widget _buildPasswordField(ThemeProvider theme) {
+    return TextField(
+      controller: _pwController,
+      obscureText: !_showPassword,
+      decoration: InputDecoration(
+        hintText: '비밀번호',
+        hintStyle: const TextStyle(color: Colors.white),
+        filled: true,
+        fillColor: theme.textFieldColor,
+        suffixIcon: IconButton(
+          icon: Icon(
+            _showPassword ? Icons.visibility : Icons.visibility_off,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            setState(() {
+              _showPassword = !_showPassword;
+            });
+          },
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.black),

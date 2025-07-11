@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:client/provider/page_provider.dart';
 import 'package:client/provider/theme_provider.dart';
+import 'package:client/constants.dart';
 
 class FindAccountPage extends StatefulWidget {
   const FindAccountPage({super.key});
@@ -97,7 +98,7 @@ class _FindIdContainerState extends State<_FindIdContainer> {
   String? gender;
   String result = "";
 
-  final String baseUrl = "https://wiset-deepfake-server.onrender.com"; // TODO: 실제 API 주소로 바꾸기
+  final String baseUrl = "${Constants.baseUrl}"; // TODO: 실제 API 주소로 바꾸기
 
   Future<void> findId() async {
     final url = Uri.parse('$baseUrl/auth/findId');

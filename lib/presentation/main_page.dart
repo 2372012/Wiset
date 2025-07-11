@@ -5,6 +5,7 @@ import 'package:client/provider/page_provider.dart';
 import 'package:client/provider/theme_provider.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:client/constants.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -24,14 +25,14 @@ class _MainPageState extends State<MainPage> {
     loadMainPageData();
   }
 
-  Future<void> loadMainPageData() async {
+ Future<void> loadMainPageData() async {
     final token = context.read<TokenProvider>().token;
     if (token == null) {
       print("❌ 토큰이 없습니다. 로그인 페이지로 이동하세요.");
       return;
     }
 
-    final uri = Uri.parse('서버 베이스 주소/mainPage');
+    final uri = Uri.parse('${Constants.baseUrl}/mainPage');
     final response = await http.get(
       uri,
       headers: {
@@ -52,6 +53,51 @@ class _MainPageState extends State<MainPage> {
       print('❌ 메인 페이지 API 호출 실패: ${response.statusCode}');
     }
   }
+
+  /*Future<void> loadMainPageData() async {
+    final token = context.read<TokenProvider>().token;
+    if (token == null) {
+      print("❌ 토큰이 없습니다. 로그인 페이지로 이동하세요.");
+      setState(() {
+        isLoading = false; // ✅ 로딩 종료 추가
+      });
+      return;
+    }
+
+    final uri = Uri.parse('${Constants.baseUrl}/mainPage');
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        buttonUrls = Map<String, String>.from(data['buttons']);
+        youtubeBanners = List<Map<String, String>>.from(
+          data['youtubeBanner'].map((item) => Map<String, String>.from(item)),
+        );
+        isLoading = false;
+      });
+    } else {
+      print('❌ 메인 페이지 API 호출 실패: ${response.statusCode}');
+
+      // ✅ 임시 데이터 설정 및 로딩 종료 처리
+      setState(() {
+        buttonUrls = {
+          "button1": "https://example.com/button1",
+          "button2": "https://example.com/button2",
+        };
+        youtubeBanners = [
+          {"title": "임시 유튜브 배너1", "url": "https://youtube.com/example1"},
+          {"title": "임시 유튜브 배너2", "url": "https://youtube.com/example2"},
+        ];
+        isLoading = false; // ✅ API 실패 시에도 로딩 종료
+      });
+    }
+  }*/
 
   @override
   Widget build(BuildContext context) {

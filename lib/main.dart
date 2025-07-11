@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:client/provider/page_provider.dart';
 import 'package:client/provider/theme_provider.dart';
-import 'package:client/provider/detection_provider.dart'; // ✅ 추가됨
+import 'package:client/provider/detection_provider.dart';
+import 'package:client/provider/token_provider.dart'; // ✅ 추가됨
 
 // 인증 & 계정 관련
 import 'presentation/login.dart';
@@ -20,7 +21,7 @@ import 'presentation/myclass.dart';
 // 탐지 관련
 import 'presentation/detect.dart';
 import 'presentation/detect_result1.dart';
-import 'presentation/loading.dart'; // ✅ 로딩 화면 import 추가
+import 'presentation/loading.dart';
 
 // 퀴즈 관련
 import 'presentation/quiz_page.dart';
@@ -34,7 +35,8 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => PageProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => DetectionProvider()), // ✅ 추가됨
+        ChangeNotifierProvider(create: (_) => DetectionProvider()),
+        ChangeNotifierProvider(create: (_) => TokenProvider()), // ✅ 추가됨
       ],
       child: const MyApp(),
     ),
@@ -97,7 +99,7 @@ class MyApp extends StatelessWidget {
               return const DetectPage();
             case 'detect_result1':
               return const DetectResult1();
-            case 'loading': // ✅ 추가된 로딩 페이지
+            case 'loading':
               return const LoadingPage();
 
           // 퀴즈 관련
@@ -110,7 +112,7 @@ class MyApp extends StatelessWidget {
             case 'quiz_result':
               return const QuizResult();
 
-          // 기본 (로그인)
+          // 기본 로그인 페이지
             case 'login':
             default:
               return const LoginPage();

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:client/provider/page_provider.dart';
 import 'package:client/provider/theme_provider.dart';
 import 'package:client/provider/detection_provider.dart'; // ✅ 추가
+import 'package:client/constants.dart';
 
 class DetectResult1 extends StatefulWidget {
   const DetectResult1({super.key});
@@ -28,7 +29,7 @@ class _DetectResult1State extends State<DetectResult1> {
     final detectionId = detectionProvider.detectionId;
     final token = detectionProvider.token;
 
-    final url = Uri.parse('https://wiset-deepfake-server.onrender.com/detections/result/$detectionId');
+    final url = Uri.parse('${Constants.baseUrl}/detections/result/$detectionId');
 
     try {
       final response = await http.get(

@@ -5,6 +5,7 @@ import 'package:client/provider/theme_provider.dart';
 import 'package:client/provider/token_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:client/constants.dart';
 
 class MyClassPage extends StatefulWidget {
   const MyClassPage({super.key});
@@ -34,14 +35,14 @@ class _MyClassPageState extends State<MyClassPage> {
     }
 
     try {
-      final uri = Uri.parse('https://your-api.com/users/me/classRank'); // 🔁 실제 주소로 교체
+      final uri = Uri.parse('${Constants.baseUrl}/users/me/classRank');
       final response = await http.get(
         uri,
         headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes)); // ✅ 한글 인코딩 처리
         setState(() {
           classInfo = data['classInfo'];
           myRank = data['myRank'];
@@ -49,7 +50,7 @@ class _MyClassPageState extends State<MyClassPage> {
           isLoading = false;
         });
       } else {
-        final error = jsonDecode(response.body);
+        final error = jsonDecode(utf8.decode(response.bodyBytes));
         _showDialog("실패", error['message'] ?? "랭킹 정보를 불러오지 못했습니다.");
       }
     } catch (e) {
@@ -62,6 +63,11 @@ class _MyClassPageState extends State<MyClassPage> {
     final theme = Provider.of<ThemeProvider>(context);
     final bgColor = theme.backgroundColor;
     final boxColor = theme.midContainerColor;
+
+    final schoolName = classInfo?["schoolName"] ?? "-";
+    final grade = classInfo?["grade"]?.toString().padLeft(2, '0') ?? "--";
+    final classNumber = classInfo?["classNumber"]?.toString().padLeft(2, '0') ?? "--";
+    final schoolDisplay = '$schoolName $grade학년 $classNumber반';
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -85,9 +91,7 @@ class _MyClassPageState extends State<MyClassPage> {
         children: [
           const SizedBox(height: 10),
           Text(
-            '${classInfo?["schoolName"] ?? "-"} '
-                '${classInfo?["grade"] ?? "-"}학년 '
-                '${classInfo?["classNumber"] ?? "-"}반',
+            schoolDisplay,
             style: const TextStyle(fontSize: 18),
           ),
           const SizedBox(height: 10),
@@ -124,9 +128,11 @@ class _MyClassPageState extends State<MyClassPage> {
                             style: const TextStyle(fontSize: 16),
                           ),
                           const SizedBox(width: 20),
-                          Text(
-                            '${user["username"] ?? "이름 없음"}',
-                            style: const TextStyle(fontSize: 16),
+                          Expanded(
+                            child: Text(
+                              '${user["username"] ?? "이름 없음"} ${user["score"] ?? "-"}점',
+                              style: const TextStyle(fontSize: 16),
+                            ),
                           ),
                         ],
                       ),

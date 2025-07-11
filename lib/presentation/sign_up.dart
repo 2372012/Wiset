@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:client/provider/page_provider.dart';
+import 'package:client/constants.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -12,10 +13,8 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  // 📌 서버 베이스 주소를 여기에 나중에 입력하세요
-  final String baseUrl = "https://wiset-deepfake-server.onrender.com"; // 예: https://api.yerangteam.com
+  final String baseUrl = Constants.baseUrl;
 
-  // 입력 필드 컨트롤러
   final usernameController = TextEditingController();
   final schoolCodeController = TextEditingController();
   final loginIdController = TextEditingController();
@@ -24,7 +23,10 @@ class _SignUpPageState extends State<SignUpPage> {
   final phoneController = TextEditingController();
   final emailController = TextEditingController();
 
-  String? gender; // "M" or "F"
+  String? gender;
+
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   Future<void> signUpUser() async {
     final url = Uri.parse('$baseUrl/auth/signup');
@@ -49,8 +51,8 @@ class _SignUpPageState extends State<SignUpPage> {
 
       if (response.statusCode == 201) {
         final data = json.decode(response.body);
-        print("회원가입 성공: ${data['userId']}");
-        context.read<PageProvider>().setPage('consent');
+        print("회원가입 성공: ${data['loginId']}");
+        context.read<PageProvider>().setPage('consent');  // 다음 페이지로 이동
       } else {
         print("회원가입 실패: ${response.statusCode} / ${response.body}");
         ScaffoldMessenger.of(context).showSnackBar(
@@ -60,7 +62,45 @@ class _SignUpPageState extends State<SignUpPage> {
     } catch (e) {
       print("에러 발생: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("네트워크 오류가 발생했습니다.")),
+        const SnackBar(content: Text("네트워크 오류가 발생했습니다.")),
+      );
+    }
+  }
+
+  Future<void> _checkDuplicateId(String loginId) async {
+    if (loginId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("아이디를 입력해주세요.")),
+      );
+      return;
+    }
+
+    final url = Uri.parse('$baseUrl/auth/check-user-id?loginId=$loginId');
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final isDuplicate = data['isDuplicate'] as bool;
+
+        if (isDuplicate) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("이미 존재하는 아이디입니다.")),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("사용 가능한 아이디입니다.")),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("오류 발생: ${response.statusCode}")),
+        );
+      }
+    } catch (e) {
+      print("중복확인 에러: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("네트워크 오류가 발생했습니다.")),
       );
     }
   }
@@ -90,7 +130,9 @@ class _SignUpPageState extends State<SignUpPage> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0xFFFFF0B3),
-                  boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(2, 2))],
+                  boxShadow: [
+                    BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(2, 2))
+                  ],
                 ),
                 padding: const EdgeInsets.all(10),
                 child: const CircleAvatar(
@@ -106,7 +148,9 @@ class _SignUpPageState extends State<SignUpPage> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFE9D8B5),
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.4), blurRadius: 4, offset: Offset(2, 2))],
+                  boxShadow: [
+                    BoxShadow(color: Colors.grey.withOpacity(0.4), blurRadius: 4, offset: Offset(2, 2))
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,7 +158,12 @@ class _SignUpPageState extends State<SignUpPage> {
                     _buildLabelInput("이름", controller: usernameController),
                     _buildGenderInput(),
                     _buildLabelInput("학교코드", controller: schoolCodeController, suffixText: "(선택)"),
-                    _buildLabelInput("아이디", controller: loginIdController, suffixButton: "중복확인"),
+                    _buildLabelInput(
+                      "아이디",
+                      controller: loginIdController,
+                      suffixButton: "중복확인",
+                      onSuffixPressed: () => _checkDuplicateId(loginIdController.text),
+                    ),
                     _buildLabelInput("비밀번호", controller: passwordController, obscure: true),
                     _buildLabelInput("비밀번호 확인", controller: confirmPasswordController, obscure: true),
                     _buildLabelInput("전화번호", controller: phoneController),
@@ -134,7 +183,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           elevation: 5,
                           shadowColor: Colors.black38,
                         ),
-                        child: const Text('협력가입', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: const Text('회원가입', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ],
@@ -149,7 +198,14 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Widget _buildLabelInput(String label,
-      {TextEditingController? controller, bool obscure = false, String? suffixText, String? suffixButton}) {
+      {TextEditingController? controller,
+        bool obscure = false,
+        String? suffixText,
+        String? suffixButton,
+        VoidCallback? onSuffixPressed}) {
+    bool isPassword = controller == passwordController;
+    bool isConfirmPassword = controller == confirmPasswordController;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -159,14 +215,35 @@ class _SignUpPageState extends State<SignUpPage> {
           Expanded(
             child: TextField(
               controller: controller,
-              obscureText: obscure,
+              obscureText: obscure
+                  ? (isPassword ? _obscurePassword : _obscureConfirmPassword)
+                  : false,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.white,
                 suffixText: suffixText,
-                suffixIcon: suffixButton != null
-                    ? TextButton(onPressed: () {}, child: Text(suffixButton!))
-                    : null,
+                suffixIcon: obscure
+                    ? IconButton(
+                  icon: Icon(
+                    (isPassword ? _obscurePassword : _obscureConfirmPassword)
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      if (isPassword) {
+                        _obscurePassword = !_obscurePassword;
+                      } else {
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
+                      }
+                    });
+                  },
+                )
+                    : (suffixButton != null
+                    ? TextButton(
+                    onPressed: onSuffixPressed, child: Text(suffixButton!))
+                    : null),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),

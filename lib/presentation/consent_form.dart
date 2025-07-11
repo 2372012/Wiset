@@ -100,7 +100,8 @@ class _ConsentFormPageState extends State<ConsentFormPage> {
             ElevatedButton(
               onPressed: () {
                 if (agreeTerms && agreePersonal) {
-                  Provider.of<PageProvider>(context, listen: false).setPage('main');
+                  // ✅ 수정된 부분: 로그인 페이지로 이동
+                  Provider.of<PageProvider>(context, listen: false).setPage('login');
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('필수 항목에 동의해주세요.')),
